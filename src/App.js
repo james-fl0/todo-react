@@ -20,10 +20,27 @@ const FILTER_MAP = {
 };
 
 const FILTER_NAMES = Object.keys(FILTER_MAP);
+const HOSTNAME = 'http://INSERT_HOSTNAME_HERE/flows';
+
+function getTasks() {
+  return fetch(`${HOSTNAME}/tasks`)
+    .then(data => data.json())
+}
 
 function App(props) {
-  const [tasks, setTasks] = useState(props.tasks);
+  const [tasks, setTasks] = useState([]);
   const [filter, setFilter] = useState('All');
+
+  useEffect(() => {
+    let mounted = true;
+    getTasks()
+      .then(items => {
+        if(mounted) {
+          setTasks(items)
+        }
+      })
+    return () => mounted = false;
+  }, [])
 
   function toggleTaskCompleted(id) {
     const updatedTasks = tasks.map(task => {
@@ -36,12 +53,18 @@ function App(props) {
       return task;
     });
     setTasks(updatedTasks);
+    fetch(`${HOSTNAME}/task/toggleComplete?id=${id}`, {
+      method: 'PUT'
+    });
   }
 
 
   function deleteTask(id) {
     const remainingTasks = tasks.filter(task => id !== task.id);
     setTasks(remainingTasks);
+    fetch(`${HOSTNAME}/task?id=${id}`, {
+      method: 'DELETE'
+    });
   }
 
 
@@ -55,6 +78,10 @@ function App(props) {
       return task;
     });
     setTasks(editedTaskList);
+    fetch(`${HOSTNAME}/task?id=${id}`, {
+      method: 'PUT',
+      body: newName,
+    });
   }
 
   const taskList = tasks
@@ -81,8 +108,13 @@ function App(props) {
   ));
 
   function addTask(name) {
-    const newTask = { id: "todo-" + nanoid(), name: name, completed: false };
-    setTasks([...tasks, newTask]);
+    fetch(`${HOSTNAME}/task`, {
+      method: 'POST',
+      body: name,
+    }).then(id => {
+      const newTask = { id: "todo-" + id, name: name, completed: false };
+      setTasks([...tasks, newTask]);
+    });
   }
 
 
