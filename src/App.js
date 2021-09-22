@@ -20,7 +20,7 @@ const FILTER_MAP = {
 };
 
 const FILTER_NAMES = Object.keys(FILTER_MAP);
-const HOSTNAME = 'http://INSERT_HOSTNAME_HERE/flows';
+const HOSTNAME = 'https://api.fl0.com/benchmark20210916/DEV/Todo%20App/flows';
 
 function getTasks() {
   return fetch(`${HOSTNAME}/tasks`)
@@ -111,8 +111,9 @@ function App(props) {
     fetch(`${HOSTNAME}/task`, {
       method: 'POST',
       body: name,
-    }).then(id => {
-      const newTask = { id: "todo-" + id, name: name, completed: false };
+    }).then(res => res.json())
+      .then(data => {
+      const newTask = { id: data.id, name: name, completed: false };
       setTasks([...tasks, newTask]);
     });
   }
